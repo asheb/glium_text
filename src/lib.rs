@@ -43,7 +43,6 @@ use glium::backend::Context;
 use glium::backend::Facade;
 use std::borrow::Cow;
 use std::default::Default;
-use std::io::Read;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -122,8 +121,8 @@ implement_vertex!(VertexFormat, position, tex_coords);
 
 impl FontTexture {
     /// Creates a new texture representing a font stored in a `FontTexture`.
-    pub fn new<R, F>(facade: &F, font: R, font_size: u32)
-                     -> Result<FontTexture, ()> where R: Read, F: Facade
+    pub fn new<F>(facade: &F, font: &[u8], font_size: u32)
+                     -> Result<FontTexture, ()> where F: Facade
     {
         // building the freetype library
         // FIXME: call FT_Done_Library
@@ -164,8 +163,6 @@ impl FontTexture {
         };
 
         // building the freetype face object
-        let font: Vec<u8> = font.bytes().map(|c| c.unwrap()).collect();
-
         let face: freetype::FT_Face = unsafe {
             let mut face = ::std::ptr::null_mut();
             let err = freetype::FT_New_Memory_Face(library, font.as_ptr(),
