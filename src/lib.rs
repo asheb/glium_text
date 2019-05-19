@@ -119,9 +119,14 @@ struct VertexFormat {
 
 implement_vertex!(VertexFormat, position, tex_coords);
 
+pub enum CharactersList {
+    All,
+    Some(Vec<char>)
+}
+
 impl FontTexture {
     /// Creates a new texture representing a font stored in a `FontTexture`.
-    pub fn new<F>(facade: &F, font: &[u8], font_size: u32)
+    pub fn new<F>(facade: &F, font: &[u8], font_size: u32, characters_list: CharactersList)
                      -> Result<FontTexture, ()> where F: Facade
     {
         // building the freetype library
@@ -175,23 +180,26 @@ impl FontTexture {
         };
 
         // computing the list of characters in the font
-        let characters_list = unsafe {
-            // TODO: unresolved symbol
-            /*if freetype::FT_Select_CharMap(face, freetype::FT_ENCODING_UNICODE) != 0 {
-                return Err(());
-            }*/
+        let characters_list = match characters_list {
+            CharactersList::All => unsafe {
+                // TODO: unresolved symbol
+                /*if freetype::FT_Select_CharMap(face, freetype::FT_ENCODING_UNICODE) != 0 {
+                    return Err(());
+                }*/
 
-            let mut result = Vec::new();
+                let mut result = Vec::new();
 
-            let mut g: freetype::FT_UInt = std::mem::uninitialized();
-            let mut c = freetype::FT_Get_First_Char(face, &mut g);
+                let mut g: freetype::FT_UInt = std::mem::uninitialized();
+                let mut c = freetype::FT_Get_First_Char(face, &mut g);
 
-            while g != 0 {
-                result.push(std::mem::transmute(c as u32));     // TODO: better solution?
-                c = freetype::FT_Get_Next_Char(face, c, &mut g);
-            }
+                while g != 0 {
+                    result.push(std::mem::transmute(c as u32));     // TODO: better solution?
+                    c = freetype::FT_Get_Next_Char(face, c, &mut g);
+                }
 
-            result
+                result
+            },
+            CharactersList::Some(chars) => chars
         };
 
         // building the infos
